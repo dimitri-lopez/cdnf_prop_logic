@@ -1,9 +1,73 @@
 #+title: Automated Equivalence Prover
+#+STARTUP: lognoteclock-out
 
 Automated Propositional Logic Equivalence Prover
 
-* Ideas
+* Project Idea
+From Bram:
+
+#+begin_quote
 Automated Equivalence Prover: Implement the algorithm we discussed in class that
 was used to demonstrate that any two equivalent statements in propositional
-logic can be transformed into each other using basic equivalence principles. Make
-output in .bram format so it can be loaded and displayed in Aris - Dimitri
+logic can be transformed into each other using basic equivalence principles.
+Make output in .bram format so it can be loaded and displayed in Aris - Dimitri
+#+end_quote
+* Resources
+- [[./references/systems_of_equivalence.pdf][Algorithm Explanation from Bram]]
+- [[./references/final_project_ideas.pdf][Final Project Ideas]]
+- [[./references/conditional_logic_equivalences_references.pdf][Table of Equivalence Rules]]
+- [[./references/propositional_logic_equivalences.pdf][Slide Deck describing normal forms]]
+* TODO Plan
+** DONE Understand the algorithm at hand
+:LOGBOOK:
+CLOCK: [2022-04-21 Thu 13:33]--[2022-04-21 Thu 14:20] =>  0:47
+- Understanding the algorithm at hand
+:END:
+
+We are essentially just creating a truth table with a special ordering and then
+creating the CDNF from that.
+** TODO Research a .bram file
+:LOGBOOK:
+CLOCK: [2022-04-21 Thu 14:21]
+:END:
+** TODO Decide on representation of things that will be needed
+** TODO Parse a .bram file
+** TODO Generating DNF
+** TODO Converting to CNF
+** TODO Convert back .bram file
+* Notes
+** Overview of Algorithm
+We are following the algorithm described by Bram in
+[[./references/systems_of_equivalence.pdf]] to show that two statements are
+equivalent. We convert two sentences into CDNF(A, B) which is the Disjunctive
+Normal Form (DNF) of A and B except that using the algorithm on hand we have
+some standardized form of it.
+
+In particular see page 4.
+
+1. Gather the atomic sentences occuring in A and B
+2. This yields us a set of atomic sentences. If there is no atomic sentences then
+   we either have a tautology or a contradiction.
+3. Create a truth table. Let the reference columns be the atomic sentences on
+   hand.
+4. Sort the reference columns / atomic sentences by some defined order. We are
+   aiming for consistency here.
+5. Work out the truth-conditions for A.
+6. For every true row, conjunct all the literals together giving us a statement.
+   If there are no true rows, then we have a contradiction.
+7. Disjunct all of these statements together.
+8. This yields us CDNF(A, B). Now check if CDNF(A, B) = CDNF(B, A). This
+   reflects if A <==> B.
+** Ideas
+- Converting to DNF can definitely be done by applying algebraic operations
+  - I think this may be faster than the truth table method.
+  - Complexity analysis of both algorithms will need to be done.
+- Complexity analysis of table method
+  - The size of the table is exponential with the number of unique atomic
+    literals.
+** .bram Format
+- https://github.com/Bram-Hub/Bram-File-Format
+- An XML based format
+
+** Example
+* Time Logging
