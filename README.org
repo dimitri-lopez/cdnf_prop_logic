@@ -1,0 +1,9 @@
+#+title: Automated Equivalence Prover
+
+Automated Propositional Logic Equivalence Prover
+
+* Ideas
+Automated Equivalence Prover: Implement the algorithm we discussed in class that
+was used to demonstrate that any two equivalent statements in propositional
+logic can be transformed into each other using basic equivalence principles. Make
+output in .bram format so it can be loaded and displayed in Aris - Dimitri
