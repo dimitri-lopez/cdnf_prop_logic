@@ -26,15 +26,31 @@ CLOCK: [2022-04-21 Thu 13:33]--[2022-04-21 Thu 14:20] =>  0:47
 
 We are essentially just creating a truth table with a special ordering and then
 creating the CDNF from that.
-** TODO Research a .bram file
+** DONE Research .bram file
 :LOGBOOK:
-CLOCK: [2022-04-21 Thu 14:21]
+CLOCK: [2022-04-21 Thu 14:21]--[2022-04-21 Thu 14:45] =>  0:24
+- Gonna start with input from the command line and then do the actual algorithm
 :END:
-** TODO Decide on representation of things that will be needed
-** TODO Parse a .bram file
-** TODO Generating DNF
-** TODO Converting to CNF
-** TODO Convert back .bram file
+** DONE Decide on representation of things that will be needed
+:LOGBOOK:
+CLOCK: [2022-04-21 Thu 14:46]--[2022-04-21 Thu 14:57] =>  0:11
+- Gonna use a binary tree
+:END:
+** DONE Parse an input file
+:LOGBOOK:
+CLOCK: [2022-04-21 Thu 16:14]--[2022-04-21 Thu 17:24] =>  1:10
+- Got most of the parsing done. Just gotta write a few linera probes and throw
+  things into the proper data structure.
+CLOCK: [2022-04-21 Thu 23:17]--[2022-04-22 Fri 01:13]  =>  1:56
+- Working on the parser... I think I have things finished. I just need to flesh
+  out the bugs and then turn it into the proper data structure.
+:END:
+** TODO Generate the proper representation
+:LOGBOOK:
+:END:
+** TODO Generate CDNF using table, output yes / no
+** TODO Generate CDNF using prop equivalence rules
+** TODO Create a .bram file
 * Notes
 ** Overview of Algorithm
 We are following the algorithm described by Bram in
@@ -68,6 +84,27 @@ In particular see page 4.
 ** .bram Format
 - https://github.com/Bram-Hub/Bram-File-Format
 - An XML based format
+** User Input
+Gonna take things in from the command line at the start. Gonna work with
+everything in the plain text format.
 
-** Example
-* Time Logging
+*** Symbols
+| Operators | Plain Text Format | Special Character |
+|-----------+-------------------+-------------------|
+| AND       | &                 | ∧                 |
+| OR        | \vert             | ∨                 |
+| NOT       | ~                 | ¬                 |
+
+
+- AND & ∧
+- OR | ∨
+- NOT ~ ¬
+** Data representation
+We are going to represent things as a tree. Both the AND and the OR operator are
+binary operators that act on two sentences. This makes me want to use binary tree.
+
+
+*** TODO How do we represent unary operators?
+*** TODO Find the atomic literals that we have
+*** TODO Parantheses matching
+*** TODO Create data structure
