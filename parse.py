@@ -73,7 +73,10 @@ def getNegationSentence(sentence, index):
         elif char in illegal_chars:
             raise Exception("Invalid propositional logic expression. Illegal character {} encountered in negation term.".format(char))
         elif char != " ":
+            # print("debug: {} - {}".format(index, sentence))
             endCharIndex = getConst(sentence, index)
+            # print("Const found: {}".format(sentence[index:endCharIndex + 1]))
+
             return endCharIndex
     raise Exception("Invalid propositional logic expression. Negation operator is missing terms.")
 
@@ -82,7 +85,9 @@ def getNegationSentence(sentence, index):
 # includes the first letter of the constant. White space is used as a delimiter.
 # The index returned will include the last char of the constant.
 def getConst(sentence, index):
-    consts = [sentence[index]]
+    # assert(False)
+    # print("get const debug: {} - {}".format(index, sentence))
+    original_index = index
     index += 1
     while index < len(sentence):
         char = sentence[index]
@@ -90,13 +95,15 @@ def getConst(sentence, index):
         illegal_chars = ["(", ")", "^", "⊤", "~"]
         operators = ["&", "|"]
         if char in illegal_chars:
-            raise Exception("Invalid propositional logic expression inputted.")
+            raise Exception("Invalid propositional logic expression inputted. Illegal character after a constant.")
         elif char in operators or char == " ": # do a linear search to make sure that an operator is found
             for j in sentence[index:]:
-                if j == " " or j in operators:
+                if j == " ":
                     continue
+                elif j in operators: # A proper expression
+                    break
                 else:
-                    raise Exception("Invalid propositional logic expression inputted. Missing a binary operator after a constant")
+                    raise Exception("Invalid propositional logic expression inputted. Missing a binary operator after a constant. Found {} instead".format(j))
             return index
 
         index += 1

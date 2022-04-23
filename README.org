@@ -47,6 +47,7 @@ CLOCK: [2022-04-21 Thu 23:17]--[2022-04-22 Fri 01:13]  =>  1:56
 :END:
 ** TODO Generate the proper representation
 :LOGBOOK:
+CLOCK: [2022-04-22 Fri 21:33]
 :END:
 ** TODO Generate CDNF using table, output yes / no
 ** TODO Generate CDNF using prop equivalence rules
