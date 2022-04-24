@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import re
+from special_characters import *
 
 
 def removeSpaces(string):
@@ -10,6 +11,8 @@ def toPlainText(string):
     new_string = string.replace("∧", "&")
     new_string = new_string.replace("∨", "|")
     new_string = new_string.replace("¬", "~")
+    new_string = new_string.replace("⊥", "^")
+    new_string = new_string.replace("⊤", "#")
     return new_string
 
 
@@ -21,7 +24,7 @@ def toSpecialChar(string):
     return new_string
 
 def validChars(string):
-    regex = re.compile(r'[ \(\)a-zA-Z0-9&\|~]')
+    regex = re.compile(r'[ \(\)a-zA-Z0-9&\|~^#]')
     for i in string:
         if regex.search(i) is None:
             raise Exception("Invalid character {} found within propositional expression.".format(i))
@@ -104,7 +107,19 @@ def getConst(sentence, index):
                     break
                 else:
                     raise Exception("Invalid propositional logic expression inputted. Missing a binary operator after a constant. Found {} instead".format(j))
-            return index
+            return index - 1
 
         index += 1
     return index - 1 # constant is the entire sentence
+
+# This is called when a set of parantheses is found, trying to ensure that it
+# runs into a binary operator at some point
+def checkForBinaryOperator(sentence, index):
+    operators = ["&", "|"]
+    illegal_chars = ["(", ")", "^", "⊤", "~"]
+    index += 1; # original index is a )
+    for char in sentence[index:]:
+        if char in operators: return
+        if char in illegal_chars:
+            raise Exception("Invalid propositional logic expression inputted. Missing a binary operator after a set of parantheses. Found {} instead".format(char))
+    return

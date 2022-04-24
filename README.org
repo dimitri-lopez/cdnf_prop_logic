@@ -47,7 +47,23 @@ CLOCK: [2022-04-21 Thu 23:17]--[2022-04-22 Fri 01:13]  =>  1:56
 :END:
 ** TODO Generate the proper representation
 :LOGBOOK:
-CLOCK: [2022-04-22 Fri 21:33]
+CLOCK: [2022-04-23 Sat 21:10]--[2022-04-23 Sat 22:16] =>  1:06
+- Printing the expression and sorting the tree. This should make some of the
+  algebra rules a bit easier.
+CLOCK: [2022-04-23 Sat 20:32]--[2022-04-23 Sat 21:09] =>  0:37
+- Finished building the tree structure
+CLOCK: [2022-04-22 Fri 21:33]--[2022-04-22 Fri 21:45] =>  0:12
+- Implementing the tree structure that is needed.
+:END:
+** TODO Algebraic operations on the tree
+:LOGBOOK:
+CLOCK: [2022-04-24 Sun 00:18]--[2022-04-24 Sun 00:40] =>  0:22
+- Working through the algebra rules. It feels like distribution is gonna be kinda
+  hard. Hopefully it won't be too bad though. Do I even need it? I can't remember.
+CLOCK: [2022-04-23 Sat 22:17]--[2022-04-23 Sat 22:38] =>  0:21
+- Did a little bit of note taking on what needs to be done. There are a lot more
+  of these little operations than I was expecting. It is gonna take a while but I
+  might be able to finish in another 4 hours or so?
 :END:
 ** TODO Generate CDNF using table, output yes / no
 ** TODO Generate CDNF using prop equivalence rules
@@ -75,6 +91,17 @@ In particular see page 4.
 7. Disjunct all of these statements together.
 8. This yields us CDNF(A, B). Now check if CDNF(A, B) = CDNF(B, A). This
    reflects if A <==> B.
+** DNF via Algebra
+*** Simplify Tautologies and Contradictions as much as possible
+*** Use Complement
+*** Statements in NNF by repeated DeMorgan and Double Negation
+*** Statements in DNF by repeated applications of Distribution of AND over OR
+*** Use adjacency to add terms?
+*** Use Commutation to order conjuncts
+*** Use Idempotence to eliminate duplicate conjuncts
+*** Use Complement and Annihilation to replace sentences with tautologies and contradictions
+***
+
 ** Ideas
 - Converting to DNF can definitely be done by applying algebraic operations
   - I think this may be faster than the truth table method.
