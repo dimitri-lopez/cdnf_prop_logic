@@ -5,3 +5,5 @@ CONT = "^"
 AND = "&"
 OR = "|"
 NOT = "~"
+
+binary_operators = [AND, OR]

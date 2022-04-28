@@ -4,6 +4,7 @@ import sys
 from parse import *
 from binary_expression import *
 from special_characters import *
+from node import *
 
 class Sentence:
     def __init__(self, sent = "", operator = "", literal = False):
@@ -22,7 +23,7 @@ def parse(s, level, parentNode, exp):
     printTree("---------------------", level)
     index = 0
     to_eval = []
-    node = Node("", [])
+    node = Node("", parentNode, [])
 
     if exp.getRoot() is None: exp.setRoot(node)
     if parentNode is not None: parentNode.addChild(node)
@@ -32,7 +33,7 @@ def parse(s, level, parentNode, exp):
     # print(node)
 
     if s.operator == "~": # Entire Sentence is negate. Evaluate inner sentence
-        node.value = "~"
+        node.setValue("~")
         to_eval.append(Sentence(sentence[1:]))
         index = len(sentence)
     if s.literal: # A literal, no need to do further parsing
@@ -52,7 +53,7 @@ def parse(s, level, parentNode, exp):
             if s.operator == "": s.operator = char
             elif char != s.operator:
                 raise Exception("Invalid propositional logic expression. Undefined behavior when mixing operators. Try wrapping things in parantheses.")
-            node.value = char
+            node.setValue(char)
             printTree("Operator: {}".format(char), level)
         elif char == "~": # treat as if entire thing is wrapped in () eg. ~A -> (~A)
             printTree("Negation: {}".format(char), level)
@@ -65,10 +66,10 @@ def parse(s, level, parentNode, exp):
             # idk if that is the right thing to do? I don't think it is. Maybe add a rec
             constant = sentence[index:endConstIndex + 1]
             # constant = sentence[index:endConstIndex]
-            if node.value == "" and endConstIndex == len(sentence) - 1: # this is a literal
-                node.value = constant
+            if node.getValue() == "" and endConstIndex == len(sentence) - 1: # this is a literal
+                node.setValue(constant)
             else:
-                node.addChild(Node(constant, []))
+                node.addChild(Node(constant, node, []))
             printTree("Constant: {}".format(constant), level)
             # to_eval.append(Sentence(sentence[index:(endCharIndex + 1)], "", True))
             index = endConstIndex + 1; continue
@@ -107,7 +108,7 @@ def main():
     exp.print()
     print("Original Sentence:  {}".format(sentence))
     print("Converted Sentence: {}".format(exp.getExpression()))
-    exp.applyOperations()
+    exp.nnf()
     print("New Sentence: {}".format(exp.getExpression()))
 
 
