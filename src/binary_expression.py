@@ -71,9 +71,10 @@ class BinaryExpression:
         # node.identity()
         # node.annihilation()
         # node.absorption()
-        node.neg_demorgan()
-        for i in node.children:
-            self.applyOperations(i)
+        # node.neg_demorgan()
+        node.distribution()
+        # for i in node.children:
+        #     self.applyOperations(i)
     def nnf(self, node = None):
         if node is None: node = self.root
         if node.neg_demorgan(): # go to the top of the tree and start over

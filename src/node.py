@@ -99,8 +99,49 @@ class Node:
 
         return True
 
+    # This is not going to do all the distribution at once. Just a single application at a time
     def distribution(self):
-        pass
+        if self.getValue() not in [AND, OR]: return False
+
+        first = None
+        second = None
+        for index in range(len(self.children)): # Ensure that all the children are and statements.
+            i = self.children[index]
+            if i.getValue() not in [AND, OR] or i.getValue() == self.getValue(): continue
+            if i.getValue() in [AND, OR] and first is None: first = index
+            elif i.getValue() in [AND, OR] and second is None: second = index
+            if first is not None and second is not None: break
+        if first is None or second is None: return False # Not enough children found
+
+        second = self.removeChild(second)
+        first = self.removeChild(first)
+
+
+        inside_operator = self.getValue()
+        outside_operator = first.getValue()
+
+        if len(self.children) == 0: # originally 2 children
+            self.setValue(outside_operator) # flop the values
+            new_parent = self
+        else:
+            new_parent = Node(outside_operator, self, [])
+
+
+        # print(first)
+        # print(second)
+        # print(self)
+        # return
+        # TODO A copy constructor might be needed here, but I am just
+        # gonna do things by reference for now.
+        for i in first.children:
+            for j in second.children:
+                new_node = Node(inside_operator, new_parent, [i, j])
+                new_parent.addChild(new_node)
+                print("added child")
+        return True
+
+
+
 
     # A & A -> A
     def idempotence(self):

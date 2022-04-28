@@ -108,7 +108,8 @@ def main():
     exp.print()
     print("Original Sentence:  {}".format(sentence))
     print("Converted Sentence: {}".format(exp.getExpression()))
-    exp.nnf()
+    # exp.nnf()
+    exp.applyOperations()
     print("New Sentence: {}".format(exp.getExpression()))
 
 
