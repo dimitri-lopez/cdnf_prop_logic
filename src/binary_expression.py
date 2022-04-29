@@ -73,6 +73,8 @@ class BinaryExpression:
         # node.absorption()
         # node.neg_demorgan()
         node.distribution()
+        print(self.getExpression())
+        node.adjacency()
         # for i in node.children:
         #     self.applyOperations(i)
     def nnf(self, node = None):
@@ -89,3 +91,4 @@ class BinaryExpression:
 
     def dnf(self):
         self.nnf() # get into nnf first
+        self.root.distribution()

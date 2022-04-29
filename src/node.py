@@ -10,6 +10,18 @@ from misc import *
 
 class Node:
     def __init__(self, value, parent, children):
+        if type(value) == Node(None, None, None): self.copyConstructor(value, parent);# copy constructor
+        else: self.defaultConstructor(value, parent, children)
+    def copyConstructor(current, node, parent):
+        current.value = node.getValue()
+        current.parent = parent
+        current.children = []
+        for i in node.children:
+            new_node = Node(None, None, None)
+            copyConstructor(new_node, i, current)
+            current.children.append(new_node) # going through here for negation stuff
+        current.children.sort() # keep things sorted
+    def defaultConstructor(value, parent, children):
         self.value = value
         self.parent = parent
         self.children = children
@@ -129,7 +141,6 @@ class Node:
         return True
 
 
-    # A & A -> A
     def idempotence(self):
         expressions = set()
         index = 0
@@ -257,5 +268,33 @@ class Node:
 
     def reduction(self):
         pass
+    # This should really only be called on the root node.
     def adjacency(self):
-        pass
+        # Gather Literals
+        literals = set()
+        for i in self.children:
+            for j in i.children:
+                literals.add(j)
+
+        # Duplicate nodes
+        nodes_to_add = []
+        for i in self.children:
+            new_node = Node(i.getValue(), self, [])
+            unused_literals = literals.copy()
+            for j in i.children:
+                unused_literals.remove(j)
+                new_node.addChild(j)
+            print("i: {}\nunused_literals: {}\n".format(i, unused_literals))
+            for j in unused_literals:
+                i.addChild(Node(NOT, new_node, [j]))
+            # for j in unused_literals:
+            #     if j.getValue() == NOT:
+            #         new_node.addChild(j.children[0]) # Get rid of a negation
+            #     else:
+            #         new_node.addChild(Node(NOT, new_node, [j]))
+            # nodes_to_add.append(new_node)
+        # print(nodes_to_add)
+        # for i in nodes_to_add:
+        #     self.addChild(i)
+
+        return True
