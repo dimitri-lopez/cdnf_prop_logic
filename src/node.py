@@ -103,61 +103,30 @@ class Node:
     def distribution(self):
         if self.getValue() not in [AND, OR]: return False
 
-        first = None
-        second = None
-        to_dist = []
-        for index in range(len(self.children)): # Ensure that all the children are and statements.
-            i = self.children[index]
-            if i.getValue() not in [AND, OR] or i.getValue() == self.getValue(): continue
-            # if i.getValue() in [AND, OR] and first is None: first = index
-            # elif i.getValue() in [AND, OR] and second is None: second = index
-            # if first is not None and second is not None: break
-            to_dist.append(index)
-        # TODO Not completely sure what to do when there is only one value
-        if len(to_dist) < 2: return False
-
-        kids = []
+        kids = self.children
+        self.children = []
         kid_lengths = []
-        for i in reversed(to_dist):
-            kids.append(self.removeChild(i))
-            kid_lengths.append(len(kids[-1].children))
-
-        kids = kids[::-1] # reverse the kids
-        kid_lengths = kid_lengths[::-1] # turn these kids inside out
+        for i in kids:
+            lchild = len(i.children)
+            if lchild in [0, 1]: kid_lengths.append(1)
+            else: kid_lengths.append(lchild)
 
         inside_operator = self.getValue()
         outside_operator = kids[0].getValue()
 
-        if len(self.children) == 0: # originally 2 children
-            self.setValue(outside_operator) # flop the values
-            new_parent = self
-        else:
-            new_parent = Node(outside_operator, self, [])
+        self.setValue(outside_operator) # flop the values
+        new_parent = self
 
         # Add nodes for the new distributions
         sub_node_vals = iterate_number_bases(kid_lengths)
         for index_set in sub_node_vals:
             new_node = Node(inside_operator, new_parent, [])
             for j in range(len(index_set)):
-                new_node.addChild(kids[j].children[index_set[j]])
+                kid_index = index_set[j]
+                if len(kids[j].children) in [0, 1]: new_node.addChild(kids[j]) # for literals and NOT
+                else: new_node.addChild(kids[j].children[kid_index])
             new_parent.addChild(new_node)
         return True
-
-
-        # print(first)
-        # print(second)
-        # print(self)
-        # return
-        # TODO A copy constructor might be needed here, but I am just
-        # gonna do things by reference for now.
-        for i in first.children:
-            for j in second.children:
-                new_node = Node(inside_operator, new_parent, [i, j])
-                new_parent.addChild(new_node)
-                print("added child")
-        return True
-
-
 
 
     # A & A -> A
