@@ -2,6 +2,7 @@
 
 from special_characters import *
 from misc import *
+import copy
 
 # TODO Distribution
 # TODO Complement
@@ -10,22 +11,22 @@ from misc import *
 
 class Node:
     def __init__(self, value, parent, children):
-        if type(value) == Node(None, None, None): self.copyConstructor(value, parent);# copy constructor
-        else: self.defaultConstructor(value, parent, children)
-    def copyConstructor(current, node, parent):
-        current.value = node.getValue()
-        current.parent = parent
-        current.children = []
-        for i in node.children:
-            new_node = Node(None, None, None)
-            copyConstructor(new_node, i, current)
-            current.children.append(new_node) # going through here for negation stuff
-        current.children.sort() # keep things sorted
-    def defaultConstructor(value, parent, children):
+    #     if type(value) == Node("", None, []): # copy constructor
+    #         self.copyConstructor(value, parent)
+    #     else: self.defaultConstructor(value, parent, children)
+    # def defaultConstructor(value, parent, children):
         self.value = value
         self.parent = parent
         self.children = children
         self.expression = None
+    def copy(self, parent):
+        new_node = Node(self.getValue(), parent, [])
+        to_add = []
+        for i in self.children:
+            to_add.append(i.copy(new_node))
+        for i in to_add:
+            new_node.addChild(i)
+        return new_node
     def setValue(self, v):
         self.value = v
         self.clearExpression()
@@ -38,6 +39,7 @@ class Node:
     def addChild(self, child):
         self.children.append(child)
         self.children.sort() # This essentially does commutation
+        self.clearExpression()
     def removeChild(self, index):
         self.clearExpression()
         return self.children.pop(index)
@@ -50,12 +52,11 @@ class Node:
         return string
     def __lt__(self, other):
         return self.getExpression() < other.getExpression()
-    def getExpression(self): # TODO fix this so it doesn't get updated so often
-        # print("v: {}".format(self.getValue()))
+    def getExpression(self):
         if self.expression != None: return self.expression
         value = self.getValue()
 
-        if value == "~":
+        if value == NOT:
             assert(len(self.children) == 1)
             if self.children[0].getValue() in binary_operators:
                 self.expression = "~({})".format(self.children[0].getExpression())
@@ -78,7 +79,7 @@ class Node:
         return self.expression
 
     def cleanNode(self):
-        if self.getValue() in ["&", "|"] and len(self.children) == 1:
+        if self.getValue() in [AND, OR] and len(self.children) == 1:
             self.setValue(self.children[0].getValue())
             self.children = self.children[0].children
     def association(self):
@@ -87,8 +88,8 @@ class Node:
         pass
 
     def double_negation(self):
-        if self.getValue() != "~": return False
-        if self.children[0].getValue() != "~": return False
+        if self.getValue() != NOT: return False
+        if self.children[0].getValue() != NOT: return False
         self.setValue(self.children[0].children[0].getValue())
         self.children[0].children = []
         self.children = []
@@ -135,8 +136,8 @@ class Node:
             new_node = Node(inside_operator, new_parent, [])
             for j in range(len(index_set)):
                 kid_index = index_set[j]
-                if len(kids[j].children) in [0, 1]: new_node.addChild(kids[j]) # for literals and NOT
-                else: new_node.addChild(kids[j].children[kid_index])
+                if len(kids[j].children) in [0, 1]: new_node.addChild(kids[j].copy(new_parent)) # for literals and NOT
+                else: new_node.addChild(kids[j].children[kid_index].copy(new_parent))
             new_parent.addChild(new_node)
         return True
 
@@ -155,6 +156,7 @@ class Node:
             index += 1
         self.cleanNode()
         return changed
+
     # A & ~A -> CONT
     # TODO: Aris requires that this must be done in two steps.
     # First by association and then you can apply the relevant step
@@ -166,7 +168,7 @@ class Node:
         to_remove = set()
         index = 0
         for child in self.children:
-            if child.getValue() == "~":
+            if child.getValue() == NOT:
                 cexp = child.children[0].getExpression()
                 if cexp in exps: to_remove.add(exp) # seen in non negated
                 nexps.add(cexp)
@@ -175,7 +177,6 @@ class Node:
                 if exp in nexps: to_remove.add(exp) # seen in negations
                 exps.add(exp)
 
-        print("to_remove: {}".format(to_remove))
         index = 0
         if len(to_remove) == 0: return False
         while index < len(self.children): # remove everything within to_remove
@@ -228,16 +229,18 @@ class Node:
                 return True
         return False
     def inverse(self):
-        if self.getValue() != "~": return False
-        if self.children[0].getValue() == "#":
-            self.setValue("^")
+        if self.getValue() != NOT: return False
+        if self.children[0].getValue() == TAUT:
+            self.setValue(CONT)
             self.children = []
-        elif self.children[0].getValue() == "^":
-            self.setValue("#")
+        elif self.children[0].getValue() == CONT:
+            self.setValue(TAUT)
             self.children = []
+        else: return False
         return True
-    # TODO make sure to run idempotence before running this. Otherwise weird
-    # shit might happen?
+
+    # make sure to run idempotence before running this. Otherwise weird shit
+    # might happen?
     def absorption(self):
         if self.getValue() not in [AND, OR]: return False
         top_exps = set()
@@ -271,10 +274,10 @@ class Node:
     # This should really only be called on the root node.
     def adjacency(self):
         # Gather Literals
-        literals = set()
+        literals = {}
         for i in self.children:
             for j in i.children:
-                literals.add(j)
+                literals[j.getExpression()] = j
 
         # Duplicate nodes
         nodes_to_add = []
@@ -282,19 +285,20 @@ class Node:
             new_node = Node(i.getValue(), self, [])
             unused_literals = literals.copy()
             for j in i.children:
-                unused_literals.remove(j)
-                new_node.addChild(j)
-            print("i: {}\nunused_literals: {}\n".format(i, unused_literals))
-            for j in unused_literals:
-                i.addChild(Node(NOT, new_node, [j]))
-            # for j in unused_literals:
-            #     if j.getValue() == NOT:
-            #         new_node.addChild(j.children[0]) # Get rid of a negation
-            #     else:
-            #         new_node.addChild(Node(NOT, new_node, [j]))
-            # nodes_to_add.append(new_node)
-        # print(nodes_to_add)
-        # for i in nodes_to_add:
-        #     self.addChild(i)
+                del unused_literals[j.getExpression()]
+                new_node.addChild(j.copy(new_node))
+            for j in unused_literals.values(): # add non-negated literals
+                i.addChild(j.copy(i))
+            for j in unused_literals.values(): # add negated literals
+                if j.getValue() == NOT:
+                    new_node.addChild(j.children[0].copy()) # Get rid of a negation
+                else:
+                    to_be_negated = j.copy(None)
+                    neg_node = Node(NOT, new_node, [to_be_negated])
+                    to_be_negated.parent = neg_node
+                    new_node.addChild(neg_node)
 
+            nodes_to_add.append(new_node)
+        for i in nodes_to_add:
+            self.addChild(i)
         return True

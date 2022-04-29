@@ -2,12 +2,14 @@
 
 from node import *
 from special_characters import *
+from fancy_print import *
 
-class BinaryExpression:
+class PropExpression:
     def __init__(self):
         self.root = None
         self.literals = set()
         self.expression = None
+        self.fp = None
     def setRoot(self, root):
         self.root = root
     def getRoot(self):
@@ -16,6 +18,8 @@ class BinaryExpression:
         self.literals.add(literal)
     def getEval(self): # TODO
         return
+    def addFancyPrint(self, fp):
+        self.fp = fp
     def print(self, currentNode = None , level = 0):
         if currentNode is None: currentNode = self.root
 
@@ -48,10 +52,10 @@ class BinaryExpression:
                 parentNode.children[index] = i.children[0]
                 i = parentNode.children[index]
             self.removeEmpties(i)
-    def getExpression(self):
-        # if self.expression is None:
-        self.nodeExpression(self.root)
-        return self.expression
+    # def getExpression(self):
+    #     # if self.expression is None:
+    #     self.nodeExpression(self.root)
+    #     return self.expression
 
     def getExpression(self):
         return self.root.getExpression()
@@ -62,21 +66,6 @@ class BinaryExpression:
             self.sortByExpression(i)
         node.children.sort()
 
-    def applyOperations(self, node = None):
-        if node is None: node = self.root
-        # node.inverse()
-        # node.double_negation()
-        # node.idempotence()
-        # node.complement()
-        # node.identity()
-        # node.annihilation()
-        # node.absorption()
-        # node.neg_demorgan()
-        node.distribution()
-        print(self.getExpression())
-        node.adjacency()
-        # for i in node.children:
-        #     self.applyOperations(i)
     def nnf(self, node = None):
         if node is None: node = self.root
         if node.neg_demorgan(): # go to the top of the tree and start over
@@ -89,6 +78,44 @@ class BinaryExpression:
         for i in node.children:
             self.nnf(i)
 
+    def algebraStep(self, fn, message, node = None):
+        if node is None: node = self.root
+        node_fn = "node." + fn
+        changed = eval(node_fn)
+        if changed:
+            self.fp.addRow(self.getExpression(), message)
+            self.algebraStep(fn, message, self.root) # recurse back to the root
+            return
+        for i in node.children:
+            self.algebraStep(fn, message, i)
+
+
+
+
+
     def dnf(self):
         self.nnf() # get into nnf first
         self.root.distribution()
+    def cdnf(self):
+        # Get rid of TAUT and CONT
+        exp = self.getExpression()
+        prev_exp = ""
+        while exp != prev_exp:
+            self.algebraStep("inverse()", "Inverse")
+            self.algebraStep("identity()", "Identity")
+            self.algebraStep("annihilation()", "Annihilation")
+            prev_exp = exp
+            exp = self.getExpression()
+        return
+
+
+
+
+        self.dnf()
+        self.root.adjacency()
+        # implicit commutation step
+        self.root.idempotence()
+        self.root.complement()
+        self.root.annihilation()
+        self.root.identity()
+        self.root.idempotence()
