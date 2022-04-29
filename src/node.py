@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 from special_characters import *
+from misc import *
 
 # TODO Distribution
 # TODO Complement
 # TODO Identity
 # TODO Annihilation
-# TODO
 
 class Node:
     def __init__(self, value, parent, children):
@@ -105,26 +105,43 @@ class Node:
 
         first = None
         second = None
+        to_dist = []
         for index in range(len(self.children)): # Ensure that all the children are and statements.
             i = self.children[index]
             if i.getValue() not in [AND, OR] or i.getValue() == self.getValue(): continue
-            if i.getValue() in [AND, OR] and first is None: first = index
-            elif i.getValue() in [AND, OR] and second is None: second = index
-            if first is not None and second is not None: break
-        if first is None or second is None: return False # Not enough children found
+            # if i.getValue() in [AND, OR] and first is None: first = index
+            # elif i.getValue() in [AND, OR] and second is None: second = index
+            # if first is not None and second is not None: break
+            to_dist.append(index)
+        # TODO Not completely sure what to do when there is only one value
+        if len(to_dist) < 2: return False
 
-        second = self.removeChild(second)
-        first = self.removeChild(first)
+        kids = []
+        kid_lengths = []
+        for i in reversed(to_dist):
+            kids.append(self.removeChild(i))
+            kid_lengths.append(len(kids[-1].children))
 
+        kids = kids[::-1] # reverse the kids
+        kid_lengths = kid_lengths[::-1] # turn these kids inside out
 
         inside_operator = self.getValue()
-        outside_operator = first.getValue()
+        outside_operator = kids[0].getValue()
 
         if len(self.children) == 0: # originally 2 children
             self.setValue(outside_operator) # flop the values
             new_parent = self
         else:
             new_parent = Node(outside_operator, self, [])
+
+        # Add nodes for the new distributions
+        sub_node_vals = iterate_number_bases(kid_lengths)
+        for index_set in sub_node_vals:
+            new_node = Node(inside_operator, new_parent, [])
+            for j in range(len(index_set)):
+                new_node.addChild(kids[j].children[index_set[j]])
+            new_parent.addChild(new_node)
+        return True
 
 
         # print(first)
