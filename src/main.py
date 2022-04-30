@@ -23,7 +23,6 @@ def main():
     parse(s, 0, None, exp)
 
     exp.clean()
-    # exp.print()
     fp.addRow(exp.getExpression(), "Commutation")
     exp.print()
     fp.print()

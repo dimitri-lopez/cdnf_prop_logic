@@ -135,25 +135,25 @@ class Sentence:
         self.literal = literal
 
 def printTree(statement, level):
-    return
     print(("|   " * level) + statement)
 
 
 def parse(s, level, parentNode, exp):
-    sentence =  s.sent
+    sentence = s.sent.strip()
     printTree("Sentence: {}".format(sentence), level)
+    printTree("s.operator: {}".format(s.operator), level)
     printTree("---------------------", level)
     index = 0
     to_eval = []
     node = Node("", parentNode, [])
 
     if exp.getRoot() is None: exp.setRoot(node)
-    if parentNode is not None: parentNode.addChild(node)
+    if parentNode is not None: parentNode.children.append(node)
 
 
     if s.operator == NOT: # Entire Sentence is negate. Evaluate inner sentence
         node.setValue(NOT)
-        to_eval.append(Sentence(sentence[1:]))
+        parse(Sentence(sentence[1:]), level + 1, node, exp)
         index = len(sentence)
     if s.literal: # A literal, no need to do further parsing
         printTree("This sentence is a literal!", level)
@@ -174,10 +174,10 @@ def parse(s, level, parentNode, exp):
                 raise Exception("Invalid propositional logic expression. Undefined behavior when mixing operators. Try wrapping things in parantheses.")
             node.setValue(char)
             printTree("Operator: {}".format(char), level)
-        elif char == "~": # treat as if entire thing is wrapped in () eg. ~A -> (~A)
+        elif char == NOT: # treat as if entire thing is wrapped in () eg. ~A -> (~A)
             printTree("Negation: {}".format(char), level)
             lastNegSentIndex = getNegationSentence(sentence, index)
-            to_eval.append(Sentence(sentence[index:(lastNegSentIndex + 1)], "~", False))
+            to_eval.append(Sentence(sentence[index:(lastNegSentIndex + 1)], NOT, False))
             index = lastNegSentIndex + 1; continue
         elif char != " ": # linear search to get entire constant name
             endConstIndex = getConst(sentence, index)

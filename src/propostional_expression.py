@@ -31,11 +31,16 @@ class PropExpression:
         print(("|   " * level) + "Value: {} - Children ({}): {}".format(currentNode.getValue(), len(currentNode.children), childrenStr))
         for i in currentNode.children:
             if len(i.children) > 0: self.print(i, level + 1)
-    def clean(self): # A user can have levels that are just nested parantheses without any actual information
+    # A user can have levels that are just nested parantheses without any actual
+    # information there can also be just blank nodes? Gonna clean those up too.
+    # TODO: With the input "# | ~~^ | ~~~#" some weird parsing is done and blank
+    # nodes are introduced
+    def clean(self):
         # print("testing equality {}".format(self.root.getValue() == ""))
-        if self.root.getValue() == "":
+        while self.root.getValue() == "":
             assert(len(self.root.children) == 1)
             self.root = self.root.children[0]
+            self.root.parent = None
         self.removeEmpties(self.root)
         self.getExpression() # Build the tree from the bottom, then we are gonna sort thie lists
         self.sortByExpression()
@@ -45,17 +50,15 @@ class PropExpression:
     def removeEmpties(self, parentNode):
         if parentNode.getValue() == "":
             assert(len(parentNode.children) == 1)
+            assert(False)
         for index in range(len(parentNode.children)):
             i = parentNode.children[index]
             if i.getValue() == "": # remove this node
                 assert(len(i.children) == 1)
                 parentNode.children[index] = i.children[0]
+                parentNode.children[index].parent = parentNode
                 i = parentNode.children[index]
             self.removeEmpties(i)
-    # def getExpression(self):
-    #     # if self.expression is None:
-    #     self.nodeExpression(self.root)
-    #     return self.expression
 
     def getExpression(self):
         return self.root.getExpression()

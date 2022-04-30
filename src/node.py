@@ -57,6 +57,9 @@ class Node:
         value = self.getValue()
 
         if value == NOT:
+            print("Value is neg: {}".format(self))
+            print("Children: {}".format(self.children))
+            assert(self.children[0].getValue() != "")
             assert(len(self.children) == 1)
             if self.children[0].getValue() in binary_operators:
                 self.expression = "~({})".format(self.children[0].getExpression())
