@@ -57,8 +57,6 @@ class Node:
         value = self.getValue()
 
         if value == NOT:
-            print("Value is neg: {}".format(self))
-            print("Children: {}".format(self.children))
             assert(self.children[0].getValue() != "")
             assert(len(self.children) == 1)
             if self.children[0].getValue() in binary_operators:
@@ -118,6 +116,15 @@ class Node:
     # This is not going to do all the distribution at once. Just a single application at a time
     def distribution(self):
         if self.getValue() not in [AND, OR]: return False
+        found = False
+        for i in self.children:
+            if i.getValue() in [AND, OR] and i.getValue() != self.getValue():
+                found = True; break
+        if not found: return False
+
+        # print("distribuuuuuuuuuuuuution")
+        # print(self.getExpression())
+        # return True
 
         kids = self.children
         self.children = []
@@ -214,6 +221,10 @@ class Node:
                 value = True
                 continue
             index += 1
+        if len(self.children) == 0:
+            if self.getValue() == AND: self.addChild(Node(TAUT, self, []))
+            if self.getValue() == OR: self.addChild(Node(CONT, self, []))
+
         self.cleanNode()
         return value
     def annihilation(self):
@@ -276,32 +287,73 @@ class Node:
         pass
     # This should really only be called on the root node.
     def adjacency(self):
+        if self.getValue() not in [AND, OR]: return False
         # Gather Literals
         literals = {}
         for i in self.children:
+            if len(i.children) == 0: # subcase when the term has only a literal
+                literals[i.getExpression()] = i
             for j in i.children:
                 literals[j.getExpression()] = j
 
         # Duplicate nodes
         nodes_to_add = []
-        for i in self.children:
+        index = 0
+        while index < len(self.children):
+            i = self.children[index]
             new_node = Node(i.getValue(), self, [])
             unused_literals = literals.copy()
-            for j in i.children:
-                del unused_literals[j.getExpression()]
-                new_node.addChild(j.copy(new_node))
-            for j in unused_literals.values(): # add non-negated literals
-                i.addChild(j.copy(i))
-            for j in unused_literals.values(): # add negated literals
-                if j.getValue() == NOT:
-                    new_node.addChild(j.children[0].copy()) # Get rid of a negation
-                else:
-                    to_be_negated = j.copy(None)
-                    neg_node = Node(NOT, new_node, [to_be_negated])
-                    to_be_negated.parent = neg_node
-                    new_node.addChild(neg_node)
+            if len(i.children) in [0, 1]: # if one of the terms is a literal
+                if self.getValue() == AND: new_node.setValue(OR) # set to the correct value
+                elif self.getValue() == OR: new_node.setValue(AND) # set to the correct value
+                del unused_literals[i.getExpression()]
+                for j in unused_literals.values():
+                    new_node.addChild(j.copy(new_node))
+                nodes_to_add.append(new_node)
+                self.removeChild(index)
+                print("Literal value: {}".format(new_node.getExpression()))
+                continue
+            # for j in i.children:
+            #     jexp = j.getExpression()
+            #     if jexp in unused_literals:
+            #         del unused_literals[jexp]
+            #         new_node.addChild(j.copy(new_node))
+            # for j in unused_literals.values(): # add non-negated literals
+            #     i.addChild(j.copy(i))
+            # for j in unused_literals.values(): # add negated literals
+            #     if j.getValue() == NOT:
+            #         new_node.addChild(j.children[0].copy(new_node)) # Get rid of a negation
+            #     else:
+            #         to_be_negated = j.copy(None)
+            #         neg_node = Node(NOT, new_node, [to_be_negated])
+            #         to_be_negated.parent = neg_node
+            #         new_node.addChild(neg_node)
 
-            nodes_to_add.append(new_node)
+            # nodes_to_add.append(new_node)
+            index += 1
+
+        # print("nodes_to_add: {}".format(nodes_to_add))
         for i in nodes_to_add:
+            print("adding: {}".format(i))
             self.addChild(i)
         return True
+    def association(self): # This is to get rid of things like (A|B) | C
+        if self.getValue() not in [AND, OR]: return False
+
+        changed = False
+        index = 0
+        to_add = []
+        while index < len(self.children):
+            i = self.children[index]
+            if self.getValue() == i.getValue(): # matching binary operator
+                print("matching binary operator")
+                for j in i.children:
+                    j.parent = self
+                    to_add.append(j)
+                changed = True
+                self.removeChild(index)
+                continue
+            index += 1
+        for i in to_add:
+            self.addChild(i)
+        return changed

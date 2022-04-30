@@ -22,6 +22,8 @@ def toSpecialChar(string):
     new_string = string.replace("&", "∧")
     new_string = new_string.replace("|", "∨")
     new_string = new_string.replace("~", "¬")
+    new_string = new_string.replace("^", "⊥")
+    new_string = new_string.replace("#", "⊤")
     return new_string
 
 def validChars(string):
@@ -135,6 +137,7 @@ class Sentence:
         self.literal = literal
 
 def printTree(statement, level):
+    return
     print(("|   " * level) + statement)
 
 

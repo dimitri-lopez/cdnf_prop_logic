@@ -24,9 +24,6 @@ def main():
 
     exp.clean()
     fp.addRow(exp.getExpression(), "Commutation")
-    exp.print()
-    fp.print()
-    return
     exp.cdnf()
 
     fp.print()

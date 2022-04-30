@@ -44,7 +44,6 @@ class PropExpression:
         self.removeEmpties(self.root)
         self.getExpression() # Build the tree from the bottom, then we are gonna sort thie lists
         self.sortByExpression()
-        # TODO Sort the bottom nodes
 
 
     def removeEmpties(self, parentNode):
@@ -69,18 +68,87 @@ class PropExpression:
             self.sortByExpression(i)
         node.children.sort()
 
-    def nnf(self, node = None):
-        if node is None: node = self.root
-        if node.neg_demorgan(): # go to the top of the tree and start over
-            print("{}          DeMorgan --------".format(self.getExpression()))
-            self.nnf()
-        if node.double_negation(): # go to the top of the tree and start over
-            print("{}       Double Negation ----".format(self.getExpression()))
-            self.nnf()
+    def nnf(self):
+        exp = self.getExpression()
+        prev_exp = ""
+        while exp != prev_exp:
+            self.algebraStep("neg_demorgan()", "DeMorgan")
+            self.algebraStep("double_negation()", "Double Negation")
+            prev_exp = exp
+        self.fp.addRow(self.getExpression(), "Negation Normal Form")
+    # def nnf(self, node = None):
+    #     if node is None: node = self.root
+    #     if node.neg_demorgan(): # go to the top of the tree and start over
+    #         print("{}          DeMorgan --------".format(self.getExpression()))
+    #         self.nnf()
+    #     if node.double_negation(): # go to the top of the tree and start over
+    #         print("{}       Double Negation ----".format(self.getExpression()))
+    #         self.nnf()
 
+    #     for i in node.children:
+    #         self.nnf(i)
+    #         exp = self.getExpression()
+
+    # def dnf(self):
+    #     self.nnf() # get into nnf first
+    #     self.algebraStep("distribution()", "Distribution")
+    #     self.fp.addRow(self.getExpression(), "Disjunctive Normal Form")
+
+    def dist(self, node):
         for i in node.children:
-            self.nnf(i)
+            if self.dist(i): return # go to top
+        # print("dist: {}".format(node))
+        changed = node.distribution()
+        if changed:
+            self.print()
+            self.fp.addRow(self.getExpression(), "Distribution")
+        return changed
 
+
+    def cdnf(self):
+        # Get rid of TAUT and CONT
+        exp = self.getExpression()
+        prev_exp = ""
+        while exp != prev_exp:
+            self.algebraStep("inverse()", "Inverse")
+            self.algebraStep("identity()", "Identity")
+            self.algebraStep("annihilation()", "Annihilation")
+            self.algebraStep("idempotence()", "Idempotence")
+            self.algebraStep("association()", "Association")
+            prev_exp = exp
+            exp = self.getExpression()
+
+        self.nnf()
+
+        # DNF
+        self.dist(self.root)
+        self.fp.addRow(self.getExpression(), "Disjunctive Normal Form")
+
+        exp = self.getExpression()
+        prev_exp = ""
+        while exp != prev_exp:
+            self.algebraStep("association()", "Association")
+            self.algebraStep("idempotence()", "Idempotence")
+            self.algebraStep("complement()", "Complement")
+            self.algebraStep("identity()", "Identity")
+            self.algebraStep("annihilation()", "Annihilation")
+            self.algebraStep("identity()", "Identity")
+            prev_exp = exp
+            exp = self.getExpression()
+        self.fp.addRow(self.getExpression(), "Simplified Disjunctive Normal Form")
+
+        self.root.adjacency()
+        self.fp.addRow(self.getExpression(), "Adjacency")
+        return
+
+
+
+        # implicit commutation step
+        self.root.idempotence()
+        self.root.complement()
+        self.root.annihilation()
+        self.root.identity()
+        self.root.idempotence()
     def algebraStep(self, fn, message, node = None):
         if node is None: node = self.root
         node_fn = "node." + fn
@@ -91,34 +159,3 @@ class PropExpression:
             return
         for i in node.children:
             self.algebraStep(fn, message, i)
-
-
-
-
-
-    def dnf(self):
-        self.nnf() # get into nnf first
-        self.root.distribution()
-    def cdnf(self):
-        # Get rid of TAUT and CONT
-        exp = self.getExpression()
-        prev_exp = ""
-        while exp != prev_exp:
-            self.algebraStep("inverse()", "Inverse")
-            self.algebraStep("identity()", "Identity")
-            self.algebraStep("annihilation()", "Annihilation")
-            prev_exp = exp
-            exp = self.getExpression()
-        return
-
-
-
-
-        self.dnf()
-        self.root.adjacency()
-        # implicit commutation step
-        self.root.idempotence()
-        self.root.complement()
-        self.root.annihilation()
-        self.root.identity()
-        self.root.idempotence()
