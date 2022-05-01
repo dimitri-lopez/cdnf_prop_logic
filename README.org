@@ -1,7 +1,4 @@
-#+title: Automated Equivalence Prover
-#+STARTUP: lognoteclock-out
-
-Automated Propositional Logic Equivalence Prover
+#+title: CDNF Converter for Propositional Logic
 
 * Overview
 I have created a slighlty buggy propositional logic expression converter to CDNF
@@ -32,6 +29,10 @@ In the future it would be cool to have these steps be used within Aris. Instead
 of adding the menial steps of LOTS of association steps, it might be better to
 generalize some of the Aris rules (Extended Cognition project for this summer?)
 and then convert the text here into the proper format.
+
+CDNF is primarily used to explore the equivalence of two expressions by simply
+seeing if two expressions have the same CDNF. I never got around to doing this.
+It can be another way that this can be built upoin in the future.
 
 There are likely quite a few bugs in this piece of code. I got at least a few
 cases to work...
