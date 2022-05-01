@@ -2,6 +2,7 @@
 
 
 def iterate_number_bases(arr, numbers = None, indices = None):
+    if len(arr) == 0: return []
     if indices is None:
         indices = [0] * len(arr);
         numbers = []

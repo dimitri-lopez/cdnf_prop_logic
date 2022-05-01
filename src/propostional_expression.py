@@ -76,34 +76,28 @@ class PropExpression:
             self.algebraStep("double_negation()", "Double Negation")
             prev_exp = exp
         self.fp.addRow(self.getExpression(), "Negation Normal Form")
-    # def nnf(self, node = None):
-    #     if node is None: node = self.root
-    #     if node.neg_demorgan(): # go to the top of the tree and start over
-    #         print("{}          DeMorgan --------".format(self.getExpression()))
-    #         self.nnf()
-    #     if node.double_negation(): # go to the top of the tree and start over
-    #         print("{}       Double Negation ----".format(self.getExpression()))
-    #         self.nnf()
 
-    #     for i in node.children:
-    #         self.nnf(i)
-    #         exp = self.getExpression()
-
-    # def dnf(self):
-    #     self.nnf() # get into nnf first
-    #     self.algebraStep("distribution()", "Distribution")
-    #     self.fp.addRow(self.getExpression(), "Disjunctive Normal Form")
 
     def dist(self, node):
         for i in node.children:
-            if self.dist(i): return # go to top
+            if self.dist(i): return True# go to top
         # print("dist: {}".format(node))
         changed = node.distribution()
         if changed:
-            self.print()
             self.fp.addRow(self.getExpression(), "Distribution")
         return changed
+    def check_dnf(self):
+        max_depth = self.get_max_depth()
+        if max_depth <= 2: return True
+        else: return False
 
+    def get_max_depth(self, node = None, depth = 0):
+        if node is None: node = self.root
+        if node.getValue() == NOT: return depth # should be nnf
+        max_depth = depth
+        for i in node.children:
+            max_depth = max(self.get_max_depth(i, depth + 1), max_depth)
+        return max_depth
 
     def cdnf(self):
         # Get rid of TAUT and CONT
@@ -121,7 +115,21 @@ class PropExpression:
         self.nnf()
 
         # DNF
-        self.dist(self.root)
+        exp = self.getExpression()
+        prev_exp = ""
+        while exp != prev_exp:
+            self.algebraStep("inverse()", "Inverse")
+            self.algebraStep("identity()", "Identity")
+            self.algebraStep("annihilation()", "Annihilation")
+            self.algebraStep("idempotence()", "Idempotence")
+            self.algebraStep("association()", "Association")
+            self.algebraStep("complement()", "Complement")
+            self.algebraStep("identity()", "Identity")
+            self.algebraStep("annihilation()", "Annihilation")
+            self.algebraStep("identity()", "Identity")
+            if not self.check_dnf(): self.dist(self.root)
+            prev_exp = exp
+            exp = self.getExpression()
         self.fp.addRow(self.getExpression(), "Disjunctive Normal Form")
 
         exp = self.getExpression()
@@ -129,7 +137,6 @@ class PropExpression:
         while exp != prev_exp:
             self.algebraStep("association()", "Association")
             self.algebraStep("idempotence()", "Idempotence")
-            self.algebraStep("complement()", "Complement")
             self.algebraStep("identity()", "Identity")
             self.algebraStep("annihilation()", "Annihilation")
             self.algebraStep("identity()", "Identity")
@@ -138,17 +145,21 @@ class PropExpression:
         self.fp.addRow(self.getExpression(), "Simplified Disjunctive Normal Form")
 
         self.root.adjacency()
-        self.fp.addRow(self.getExpression(), "Adjacency")
-        return
-
-
+        self.fp.addRow("{} terms".format(len(self.root.children)), "Adjacency")
 
         # implicit commutation step
-        self.root.idempotence()
-        self.root.complement()
-        self.root.annihilation()
-        self.root.identity()
-        self.root.idempotence()
+        prev_exp = ""
+        while exp != prev_exp:
+            self.algebraStep("idempotence()", "Idempotence")
+            self.algebraStep("complement()", "Complement")
+            self.algebraStep("annihilation()", "Annihilation")
+            self.algebraStep("identity()", "Identity")
+            prev_exp = exp
+            exp = self.getExpression()
+
+
+        self.fp.addRow(self.getExpression(), "CDNF")
+
     def algebraStep(self, fn, message, node = None):
         if node is None: node = self.root
         node_fn = "node." + fn
@@ -159,3 +170,5 @@ class PropExpression:
             return
         for i in node.children:
             self.algebraStep(fn, message, i)
+
+

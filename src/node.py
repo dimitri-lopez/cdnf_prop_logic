@@ -122,8 +122,6 @@ class Node:
                 found = True; break
         if not found: return False
 
-        # print("distribuuuuuuuuuuuuution")
-        # print(self.getExpression())
         # return True
 
         kids = self.children
@@ -153,6 +151,12 @@ class Node:
 
 
     def idempotence(self):
+        if len(self.children) == 2 and \
+           self.children[0].getExpression() == self.children[1].getExpression():
+            self.setValue(self.children[0].getValue())
+            self.children = []
+            return True
+
         expressions = set()
         index = 0
         changed = False
@@ -180,12 +184,12 @@ class Node:
         for child in self.children:
             if child.getValue() == NOT:
                 cexp = child.children[0].getExpression()
-                if cexp in exps: to_remove.add(exp) # seen in non negated
                 nexps.add(cexp)
+                if cexp in exps: to_remove.add(cexp) # seen in non negated
             else:
                 exp = child.getExpression()
-                if exp in nexps: to_remove.add(exp) # seen in negations
                 exps.add(exp)
+                if exp in nexps: to_remove.add(exp) # seen in negations
 
         index = 0
         if len(to_remove) == 0: return False
@@ -292,49 +296,59 @@ class Node:
         literals = {}
         for i in self.children:
             if len(i.children) == 0: # subcase when the term has only a literal
-                literals[i.getExpression()] = i
+                literals[i.getExpression()] = i;
             for j in i.children:
-                literals[j.getExpression()] = j
+                if j.getValue() == NOT: # subcase when the term has only a negation
+                    literals[j.children[0].getExpression()] = j.children[0]
+                else:
+                    literals[j.getExpression()] = j
 
         # Duplicate nodes
-        nodes_to_add = []
+        new_children = []
         index = 0
         while index < len(self.children):
             i = self.children[index]
-            new_node = Node(i.getValue(), self, [])
-            unused_literals = literals.copy()
-            if len(i.children) in [0, 1]: # if one of the terms is a literal
-                if self.getValue() == AND: new_node.setValue(OR) # set to the correct value
-                elif self.getValue() == OR: new_node.setValue(AND) # set to the correct value
-                del unused_literals[i.getExpression()]
-                for j in unused_literals.values():
-                    new_node.addChild(j.copy(new_node))
-                nodes_to_add.append(new_node)
-                self.removeChild(index)
-                print("Literal value: {}".format(new_node.getExpression()))
+            missing_literals = literals.copy()
+
+            base_node = i
+            if len(i.children) == len(literals.values()): # fully populated
+                index += 1
                 continue
-            # for j in i.children:
-            #     jexp = j.getExpression()
-            #     if jexp in unused_literals:
-            #         del unused_literals[jexp]
-            #         new_node.addChild(j.copy(new_node))
-            # for j in unused_literals.values(): # add non-negated literals
-            #     i.addChild(j.copy(i))
-            # for j in unused_literals.values(): # add negated literals
-            #     if j.getValue() == NOT:
-            #         new_node.addChild(j.children[0].copy(new_node)) # Get rid of a negation
-            #     else:
-            #         to_be_negated = j.copy(None)
-            #         neg_node = Node(NOT, new_node, [to_be_negated])
-            #         to_be_negated.parent = neg_node
-            #         new_node.addChild(neg_node)
 
-            # nodes_to_add.append(new_node)
-            index += 1
+            if len(i.children) in [0, 1]: # convert this bad boy into something else real quick
+                base_node = Node(None, self, [i])
+                if self.getValue() == AND:  base_node.setValue(OR)  # set to the correct value
+                elif self.getValue() == OR: base_node.setValue(AND) # set to the correct value
+                self.removeChild(index)
+            else: self.removeChild(index)
 
-        # print("nodes_to_add: {}".format(nodes_to_add))
-        for i in nodes_to_add:
-            print("adding: {}".format(i))
+            # find nodes to add
+            for j in base_node.children:
+                jexp = ""
+                if j.getValue() == NOT: jexp = j.children[0].getExpression()
+                else: jexp = j.getExpression()
+
+                if jexp in missing_literals:
+                    del missing_literals[jexp]
+
+
+            binary_values = iterate_number_bases([2] * len(missing_literals.values()))
+            exps = list(missing_literals)
+            for term in binary_values:
+                adj_node = base_node.copy(self)
+                for bin_index in range(len(term)):
+                    to_add = missing_literals[exps[bin_index]].copy(None)
+
+                    if term[bin_index] == 0: # non-negated term
+                        to_add.parent = adj_node
+                        adj_node.addChild(to_add)
+                    elif term[bin_index] == 1: # negated term
+                        neg_node = Node(NOT, adj_node, [to_add])
+                        to_add.parent = neg_node
+                        adj_node.addChild(neg_node)
+                new_children.append(adj_node)
+
+        for i in new_children: # add all the new little ones
             self.addChild(i)
         return True
     def association(self): # This is to get rid of things like (A|B) | C
@@ -346,7 +360,6 @@ class Node:
         while index < len(self.children):
             i = self.children[index]
             if self.getValue() == i.getValue(): # matching binary operator
-                print("matching binary operator")
                 for j in i.children:
                     j.parent = self
                     to_add.append(j)
@@ -357,3 +370,4 @@ class Node:
         for i in to_add:
             self.addChild(i)
         return changed
+
